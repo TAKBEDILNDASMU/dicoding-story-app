@@ -71,3 +71,32 @@ a {
 .main {
   padding: 2rem;
 }
+
+.hidden {
+  display: none !important
+}
+
+.skip-to-content {
+  position: absolute !important;
+  overflow: hidden;
+  color: red;
+  top: 6rem;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 1px;
+  width: 1px;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  padding: 0;
+  z-index: 1000;
+}
+
+.skip-to-content:focus {
+  display: block;
+  height: auto;
+  width: auto;
+  clip: auto;
+  padding: 1rem;
+  background: white;
+  border: 2px solid black;
+}

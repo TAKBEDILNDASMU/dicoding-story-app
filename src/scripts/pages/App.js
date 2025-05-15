@@ -1,8 +1,8 @@
-import { routes } from "../routes/routes";
-import { parseCurrentRoute } from "../routes/url-parser";
+import { routes } from '../routes/routes';
+import { parseCurrentRoute } from '../routes/url-parser';
 
 class App {
-  constructor(rootElementId = "root") {
+  constructor(rootElementId = 'root') {
     this.rootElement = document.getElementById(rootElementId);
     if (!this.rootElement) {
       throw new Error(`Root element with ID ${rootElementId} is not exist!`);

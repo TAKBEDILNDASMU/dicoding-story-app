@@ -10,8 +10,8 @@ import { renderButton } from './buttonComponent';
  */
 export function renderFormGroup(labelText, content, id = '') {
   return `
-    <div class="create-form__group" ${id ? `id=${id}` : ''}>
-      <label class="create-form__label">${labelText}</label>
+    <div class="create-form__group" >
+      <label class="create-form__label" ${id ? `id=${id}` : ''}>${labelText}</label>
       ${content}
     </div>
   `;
@@ -25,14 +25,26 @@ export function renderImageUpload() {
   const content = `
     <div class="create-form__image-upload" id="imageUploadArea">
       <div class="create-form__image-container">
+        <video id="cameraPreview" class="camera-preview hidden" autoplay></video>
+        <button type="button" id="captureButton" class="capture-button hidden">Capture Photo</button>
+        <canvas id="captureCanvas" class="hidden"></canvas>
         <input type="file" id="imageUploadInput" accept="image/jpeg, image/png, image/gif" style="display: none;">
         ${svgIcons.image(24, 'create-form__image-icon')}
         <p class="create-form__upload-text">Drag and drop an image here, or click to select</p>
         <small class="create-form__upload-help">JPG, PNG, GIF up to 10MB</small>
       </div>
-      </div>
+         <!-- Camera button will be rendered here via JavaScript -->
+      <button id="imageCameraUpload" type="button" class="create-form__camera-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-camera">
+          <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+          <circle cx="12" cy="13" r="3"></circle>
+        </svg>
+        <span>Take Photo Instead</span>
+      </button>
+
+    </div>
   `;
-  return renderFormGroup('Image', content);
+  return renderFormGroup('Image', content, 'imageUploadInput');
 }
 
 /**
@@ -62,7 +74,7 @@ export function renderLocationInput(defaultLocation = 'Jakarta') {
    <div id="mapContainer" class="create-form__map"></div>
    <div class="create-form__location-input">
     ${svgIcons.location(24, 'create-form__location-icon')}
-    <input id="locationInput" class="create-form__location-field" type="text" value="${defaultLocation}">
+    <input disabled id="locationInput" class="create-form__location-field" type="text" value="${defaultLocation}">
    </div>
   `;
 
@@ -88,9 +100,7 @@ export function renderFormActions() {
     },
   ];
 
-  const buttonHtml = buttons
-    .map((btn) => renderButton(btn.text, btn.variant, '', btn.type, { id: btn.id }, btn.svgBtn))
-    .join('');
+  const buttonHtml = buttons.map((btn) => renderButton(btn.text, btn.variant, '', btn.type, { id: btn.id }, btn.svgBtn)).join('');
 
   return `
     <div class="create-form__actions">

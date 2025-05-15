@@ -1,6 +1,8 @@
-import { ACCESS_TOKEN_KEY, BASE_URL } from '../config';
+import HomePresenter from '../pages/home/HomePresenter';
 import mapManager from '../utils/mapManager';
+import * as StoryApi from '../data/api.js';
 import svgIcons from '../utils/svgIcons';
+import LocationService from '../services/LocationService';
 
 export const renderModal = (storyData) => {
   // Generate a unique ID for this modal's map container
@@ -14,7 +16,6 @@ export const renderModal = (storyData) => {
     hour12: false,
   };
   const date = new Date(storyData.timestamp).toLocaleString('en-US', options);
-  console.log(date);
 
   return `
     <div class="modal" id="story-modal">
@@ -52,37 +53,26 @@ export const renderModal = (storyData) => {
 /**
  * Function for initialize the specific card if the user click it
  */
-export const initializeModal = () => {
+export const initializeModal = (presenter) => {
   const cards = document.querySelectorAll('.story-card');
 
   // Add click event to each card
   cards.forEach((card) => {
     card.addEventListener('click', async () => {
-      // Fetch data from Dicoding API
-      console.log(card);
-      const urlGetStory = `${BASE_URL}/stories/${card.id}`;
-      const response = await fetch(urlGetStory, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${ACCESS_TOKEN_KEY}`,
-        },
+      const presenter = new HomePresenter({
+        view: this,
+        model: StoryApi,
       });
 
-      if (!response.ok) {
-        throw new Error('HTTP request error');
-      }
-
-      const { story } = await response.json();
-
-      // Extract data from the clicked card
-      const location = card.querySelector('.story-card__location-text').textContent;
+      const locationService = new LocationService();
+      const { story } = await presenter.getStoryDetail(card.id);
 
       // Create story data object
       const storyData = {
         imgUrl: story.photoUrl,
         imgAlt: story.name,
         username: story.name,
-        location,
+        location: 'Loading Location...',
         description: story.description,
         timestamp: story.createdAt,
       };
@@ -100,13 +90,18 @@ export const initializeModal = () => {
       const mapContainer = modal.querySelector('.modal-map');
       const mapContainerId = mapContainer.id;
 
+      const locationDom = document.querySelector('.modal-body__location-text');
+
       // Initialize map after modal is visible
-      setTimeout(() => {
+      setTimeout(async () => {
         mapManager.createMap(mapContainerId, {
           lat: story.lat,
           lng: story.lon,
           zoom: 12,
         });
+
+        const locationName = await locationService.reverseGeocode(story.lat, story.lon);
+        locationDom.textContent = locationName || `Location: (Lat: ${story.lat.toFixed(4)}, Long: ${story.lon.toFixed(4)})`;
       }, 300);
 
       // Add close button event

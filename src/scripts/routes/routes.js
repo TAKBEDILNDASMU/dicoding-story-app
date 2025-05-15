@@ -1,20 +1,19 @@
-import CreatePresenter from '../pages/create/CreatePresenter';
-import HomePresenter from '../pages/home/HomePresenter';
+import CreatePage from '../pages/create/CreatePage';
+import HomePage from '../pages/home/HomePage';
 
-// use for clean up to prevent memory leaks
-let currentPresenter = null;
+let page = null;
 
 export const routes = {
   '/': () => {
-    // clean up previous presenter if exist
-    if (currentPresenter) {
-      currentPresenter.handlePageUnmount();
+    if (page !== null && page.cameraManager !== null) {
+      page.cameraManager.stopCamera();
     }
-    currentPresenter = new HomePresenter();
-    return currentPresenter;
+
+    page = new HomePage();
+    return page;
   },
   '/create': () => {
-    currentPresenter = new CreatePresenter();
-    return currentPresenter;
+    page = new CreatePage();
+    return page;
   },
 };

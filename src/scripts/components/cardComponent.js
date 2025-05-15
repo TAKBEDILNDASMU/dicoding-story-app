@@ -48,7 +48,7 @@ export function renderCard({
 
   return `
     <div class="story-card" id="${storyId}">
-      <img class="story-card__image" src="${imgUrl}" alt="${imgAlt}" onerror="this.src='placeholder.jpg'; this.alt='Image not available';">
+      <img class="story-card__image" src="${imgUrl}" alt="${imgAlt}" this.alt="${imgAlt}";>
       <div class="story-card__content">
           <div class="story-card__author">
               <span class="story-card__icon-container">

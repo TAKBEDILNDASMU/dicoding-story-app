@@ -1,56 +1,99 @@
-import { ACCESS_TOKEN_KEY, BASE_URL } from '../../config';
-import HomePage from './HomePage';
-
+/**
+ * HomePresenter class - handles business logic for the HomePage component
+ * @class
+ */
 class HomePresenter {
-  constructor() {
-    this.view = new HomePage();
-    this.data = [];
+  /** @private */
+  #view;
+
+  /** @private */
+  #model;
+
+  /** @private */
+  #cachedStories = null;
+
+  /**
+   * Creates an instance of HomePresenter
+   * @constructor
+   * @param {Object} params - Constructor parameters
+   * @param {Object} params.view - The view instance this presenter is associated with
+   * @param {Object} params.model - The data model/API service
+   */
+  constructor({ view, model }) {
+    this.#view = view;
+    this.#model = model;
   }
 
   /**
-   * Initialize the presenter by fetching any required data
+   * Fetches all stories from the API
+   * @async
+   * @returns {Promise<Object>} Object containing the list of stories
+   * @throws {Error} If the API request fails
+   */
+  async getAllStories() {
+    try {
+      // Implement caching for better performance during transitions
+      if (this.#cachedStories) {
+        console.log('Using cached stories');
+        return this.#cachedStories;
+      }
+
+      const response = await this.#model.getAllStories();
+      this.#cachedStories = response; // Cache the response
+      return response;
+    } catch (error) {
+      console.error('Failed to fetch stories:', error.message);
+      throw error; // Re-throw to allow the view to handle the error
+    }
+  }
+
+  /**
+   * Refreshes the story list and updates the view
+   * @async
    * @returns {Promise<void>}
    */
-  async init() {
-    this.data = await this.fetchHomeData();
+  async refreshStories() {
+    try {
+      // Clear the cache to force a fresh fetch
+      this.#cachedStories = null;
+
+      // Fetch fresh data
+      const response = await this.#model.getAllStories();
+
+      // Update the cache
+      this.#cachedStories = response;
+
+      // Update the view if available
+      if (this.#view && typeof this.#view.refreshStories === 'function') {
+        this.#view.refreshStories(response.listStory);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Failed to refresh stories:', error.message);
+      throw error;
+    }
   }
 
   /**
-   * Mock function to simulate data fetching
-   * Replace with actual data fetching logic when needed
+   * Fetches details for a specific story
+   * @async
+   * @param {string} id - The ID of the story to fetch
+   * @returns {Promise<Object>} The story details
+   * @throws {Error} If the API request fails
    */
-  async fetchHomeData() {
-    const urlGetStories = `${BASE_URL}/stories`;
-    const response = await fetch(urlGetStories, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${ACCESS_TOKEN_KEY}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('HTTP request error');
+  async getStoryDetail(id) {
+    if (!id) {
+      throw new Error('Story ID is required');
     }
 
-    const data = await response.json();
-    return data.listStory;
-  }
-
-  /**
-   * Prepare the view with data and render it
-   * @returns {Promise<string>} Rendered HTML content
-   */
-  async present() {
-    // Initialize the presenter to fetch data
-    await this.init();
-
-    // Pass data to the view and render
-    return await this.view.renderPage(this.data);
-  }
-
-  async afterPresent() {
-    this.view.afterRender();
+    try {
+      const response = await this.#model.getDetailStory(id);
+      return response;
+    } catch (error) {
+      console.error(`Failed to fetch story with ID ${id}:`, error.message);
+      throw error; // Re-throw to allow the view to handle the error
+    }
   }
 }
 
