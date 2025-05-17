@@ -47,6 +47,15 @@ class LocationManager {
     return mapInstance;
   }
 
+  initialHomeMap(coordinates) {
+    const mapInstance = mapManager.displayMultipleMarkers('mapHomeContainer', {
+      coordinates: coordinates,
+      zoom: 14,
+    });
+
+    return mapInstance;
+  }
+
   /**
    * Handles map click or marker drag events
    * @param {Object} position - Contains latitude and longitude of the selected position

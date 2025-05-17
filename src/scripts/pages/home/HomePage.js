@@ -4,6 +4,7 @@ import * as StoryApi from '../../data/api.js';
 import { renderHeader } from '../../components/headerComponent.js';
 import './homePage.css';
 import { initializeModal } from '../../components/modalComponent.js';
+import LocationManager from '../create/locationManager.js';
 
 /**
  * HomePage class - manages the home page view of the StoryFeed application
@@ -28,6 +29,7 @@ class HomePage {
 
     // Initialize transition controller if the browser supports it
     this.#initTransitionController();
+    this.locationManager = null;
   }
 
   /**
@@ -100,6 +102,10 @@ class HomePage {
   
       <main class="main">
           <div class="section__title">
+              <h1 class="section__title-heading">Map Heat</h1>
+          </div>
+          <div id="mapHomeContainer" class="create-form__map"></div>
+          <div class="section__title">
               <h1 class="section__title-heading">Stories</h1>
           </div>
           <div class="story-grid">
@@ -137,12 +143,21 @@ class HomePage {
   /**
    * Performs actions after the page is rendered in the DOM
    */
-  afterPresent() {
+  async afterPresent() {
     // Initialize modal functionality for cards
     initializeModal();
 
     // Add event listeners for story interactions if needed
     this.#addEventListeners();
+
+    // Get all location data and feed it to the map
+    let { listStory } = await StoryApi.getAllStories();
+    const coordinates = listStory.map((story) => {
+      return { lat: story.lat, lng: story.lon, popupContent: story.name };
+    });
+
+    this.locationManager = new LocationManager();
+    await this.locationManager.initialHomeMap(coordinates);
   }
 
   /**
