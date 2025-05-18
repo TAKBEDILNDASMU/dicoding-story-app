@@ -30,6 +30,7 @@
   border-bottom: 2px solid var(--secondary-color);
   padding-bottom: 0.5rem;
   position: relative;
+  margin-top: 1.5rem;
 }
 
 .section__title::after {

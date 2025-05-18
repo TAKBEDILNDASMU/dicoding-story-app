@@ -20,6 +20,7 @@
   font-weight: 600;
   margin-bottom: 8px;
   color: #333;
+  cursor: pointer;
 }
 
 .create-form__image-upload {

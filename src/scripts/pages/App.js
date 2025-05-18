@@ -11,6 +11,7 @@ class App {
 
   async renderCurrentRoute() {
     const url = parseCurrentRoute();
+    if (url == 'sectionStory') return;
     const route = routes[url];
 
     // get page instance and update the dom

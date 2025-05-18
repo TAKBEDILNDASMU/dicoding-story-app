@@ -101,11 +101,11 @@ class HomePage {
       ])} 
   
       <main class="main">
-          <div class="section__title">
+          <div class="section__title"=>
               <h1 class="section__title-heading">Map Heat</h1>
           </div>
           <div id="mapHomeContainer" class="create-form__map"></div>
-          <div class="section__title">
+          <div class="section__title" id="sectionStory">
               <h1 class="section__title-heading">Stories</h1>
           </div>
           <div class="story-grid">

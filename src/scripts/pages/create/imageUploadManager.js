@@ -66,6 +66,7 @@ class ImageUploadManager {
     // Drag and drop event
     this.imageUploadDiv.addEventListener('dragover', (event) => {
       event.preventDefault();
+      console.log('test');
       this.imageUploadDiv.classList.add('create-form__image-upload--dragover');
     });
 

@@ -11,7 +11,7 @@ import { renderButton } from './buttonComponent';
 export function renderFormGroup(labelText, content, id = '') {
   return `
     <div class="create-form__group" >
-      <label class="create-form__label" ${id ? `id=${id}` : ''}>${labelText}</label>
+      <label class="create-form__label" ${id ? `for=${id}` : ''}>${labelText}</label>
       ${content}
     </div>
   `;
@@ -66,7 +66,7 @@ export function renderTextarea(label, placeholder = '', rows = 4, value = '') {
       placeholder="${placeholder}"
     >${value}</textarea>
   `;
-  return renderFormGroup(label, content);
+  return renderFormGroup(label, content, 'descriptionInput');
 }
 
 export function renderLocationInput(defaultLocation = 'Jakarta') {
