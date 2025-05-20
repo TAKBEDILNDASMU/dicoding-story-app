@@ -102,16 +102,22 @@ class HomePage {
   
       <main class="main">
           <div class="section__title"=>
-              <h1 class="section__title-heading">Map Heat</h1>
+              <h2 class="section__title-heading">Map Heat</h2>
           </div>
           <div id="mapHomeContainer" class="create-form__map"></div>
           <div class="section__title" id="sectionStory">
-              <h1 class="section__title-heading">Stories</h1>
+              <h2 class="section__title-heading">Stories</h2>
           </div>
           <div class="story-grid">
             ${this.#renderStoryGrid(listStory)}
           </div>
       </main>
+
+      <footer class="footer">
+        <div class="footer__container">
+          <p>&copy; ${new Date().getFullYear()} StoryFeed. All rights reserved.</p>
+        </div>
+      </footer>
     `;
   }
 
@@ -151,7 +157,7 @@ class HomePage {
     this.#addEventListeners();
 
     // Get all location data and feed it to the map
-    let { listStory } = await StoryApi.getAllStories();
+    let { listStory } = await this.#presenter.getAllStories();
     const coordinates = listStory.map((story) => {
       return { lat: story.lat, lng: story.lon, popupContent: story.name };
     });
@@ -165,7 +171,7 @@ class HomePage {
    * @private
    */
   #addEventListeners() {
-    // Example: Add event delegation for story card clicks
+    // Add event delegation for story card clicks
     document.querySelector('.story-grid').addEventListener('click', (event) => {
       const storyCard = event.target.closest('.story-card');
       if (storyCard) {
@@ -186,6 +192,14 @@ class HomePage {
         const href = link.getAttribute('href');
         this.#navigateWithTransition(href);
       }
+    });
+
+    document.querySelector('.skip-to-content').addEventListener('click', (event) => {
+      event.preventDefault();
+
+      const storyContent = document.getElementById('sectionStory');
+      storyContent.focus();
+      storyContent.scrollIntoView();
     });
   }
 

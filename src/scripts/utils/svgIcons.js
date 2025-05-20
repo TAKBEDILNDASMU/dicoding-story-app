@@ -130,7 +130,7 @@ const svgIcons = {
   avatar: ({ className = '', username = 'Alexa' }) => {
     // Get first letter of username for avatar
     const avatarLetter = username.split(' ')[0];
-    return `<img class="${className}" src="https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarLetter}"/>`;
+    return `<img class="${className}" src="https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarLetter}" alt="${avatarLetter}"/>`;
   },
 };
 
