@@ -1,8 +1,4 @@
-/**
- * HomePresenter class - handles business logic for the HomePage component
- * @class
- */
-class HomePresenter {
+class BookmarkPresenter {
   /** @private */
   #view;
 
@@ -25,7 +21,7 @@ class HomePresenter {
   }
 
   /**
-   * Fetches all stories from the API
+   * Fetches all stories from the IndexedDB
    * @async
    * @returns {Promise<Object>} Object containing the list of stories
    * @throws {Error} If the API request fails
@@ -94,6 +90,11 @@ class HomePresenter {
       throw error; // Re-throw to allow the view to handle the error
     }
   }
+
+  /**
+   * Delete story from IndexedDB
+   */
+  async deleteStory() {}
 }
 
-export default HomePresenter;
+export default BookmarkPresenter;

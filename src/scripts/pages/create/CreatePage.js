@@ -36,8 +36,8 @@ class CreatePage {
    * Renders the page HTML structure
    * @returns {Promise<string>} The HTML markup for the page
    */
-  async present() {
-    return `
+  async present(containerElement) {
+    containerElement.innerHTML = `
       ${renderHeader('StoryCreate', [
         {
           href: '/#/',

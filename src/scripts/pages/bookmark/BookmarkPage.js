@@ -1,19 +1,11 @@
-import { renderCard } from '../../components/cardComponent';
-import HomePresenter from './HomePresenter';
-import * as StoryApi from '../../data/api.js';
+import { renderCard } from '../../components/cardComponent.js';
 import { renderHeader } from '../../components/headerComponent.js';
-import './homePage.css';
 import { initializeModal } from '../../components/modalComponent.js';
-import LocationManager from '../create/locationManager.js';
-import { isCurrentPushSubscriptionAvailable, subscribe, unsubscribe } from '../../utils/notification-helper.js';
-import { isServiceWorkerAvailable } from '../../utils/serviceWorker.js';
-import { generateSubscribeButtonTemplate, generateUnsubscribeButtonTemplate } from '../../components/buttonComponent.js';
+import * as StoryApi from '../../data/api.js';
+import Database from '../../data/database.js';
+import HomePresenter from '../home/HomePresenter';
 
-/**
- * HomePage class - manages the home page view of the StoryFeed application
- * @class
- */
-class HomePage {
+class BookmarkPage {
   /** @private */
   #presenter = null;
 
@@ -32,7 +24,6 @@ class HomePage {
 
     // Initialize transition controller if the browser supports it
     this.#initTransitionController();
-    this.locationManager = null;
   }
 
   /**
@@ -81,29 +72,6 @@ class HomePage {
     }
   }
 
-  async #setupPushNotification() {
-    const pushNotificationTools = document.getElementById('push-notification-tools');
-    const isSubscribed = await isCurrentPushSubscriptionAvailable();
-
-    if (isSubscribed) {
-      pushNotificationTools.innerHTML = generateUnsubscribeButtonTemplate();
-      document.getElementById('unsubscribe-button').addEventListener('click', () => {
-        unsubscribe().finally(() => {
-          this.#setupPushNotification();
-        });
-      });
-
-      return;
-    }
-
-    pushNotificationTools.innerHTML = generateSubscribeButtonTemplate();
-    document.getElementById('subscribe-button').addEventListener('click', () => {
-      subscribe().finally(() => {
-        this.#setupPushNotification();
-      });
-    });
-  }
-
   /**
    * Renders the static shell of the home page.
    * @returns {string} HTML markup for the home page's shell.
@@ -114,7 +82,7 @@ class HomePage {
         {
           href: '/#/',
           text: 'Feed',
-          active: true,
+          active: false,
         },
         {
           href: '/#/create',
@@ -124,16 +92,8 @@ class HomePage {
       ])} 
   
       <main class="main">
-          <div class="section__title">
-              <h2 class="section__title-heading">Map Heat</h2>
-              <div class="section__wrapper-button">
-                <a href="/#/bookmarks" id="report-detail-save" class="section__wrapper-btn-bookmark">Saved Story</a>
-                <div id="push-notification-tools"></div>
-              </div>
-          </div>
-          <div id="mapHomeContainer" class="create-form__map"></div>
           <div class="section__title" id="sectionStory">
-              <h2 class="section__title-heading">Stories</h2>
+              <h2 class="section__title-heading">Saved Stories</h2>
           </div>
           <div class="story-grid">
             <p class="loading-stories-indicator">Loading stories...</p>
@@ -162,26 +122,12 @@ class HomePage {
 
   async loadDynamicContent() {
     try {
-      const { listStory } = await this.#presenter.getAllStories();
+      const listStory = await Database.getAllStories();
       const storyGridElement = document.querySelector('.story-grid');
       if (storyGridElement) {
         storyGridElement.innerHTML = this.#renderStoryGrid(listStory);
       } else {
         console.warn('.story-grid element not found for story rendering.');
-      }
-
-      // Initialize map (moved from original afterPresent)
-      const coordinates = listStory.map((story) => ({
-        lat: story.lat,
-        lng: story.lon,
-        popupContent: story.name,
-      }));
-      this.locationManager = new LocationManager();
-      await this.locationManager.initialHomeMap(coordinates);
-
-      // Setup push notifications (can also be here or in afterShellRendered)
-      if (isServiceWorkerAvailable()) {
-        this.#setupPushNotification();
       }
     } catch (error) {
       console.error('Error loading dynamic content:', error);
@@ -226,19 +172,6 @@ class HomePage {
 
     // Add event listeners for story interactions if needed
     this.#addEventListeners();
-
-    // Get all location data and feed it to the map
-    let { listStory } = await this.#presenter.getAllStories();
-    const coordinates = listStory.map((story) => {
-      return { lat: story.lat, lng: story.lon, popupContent: story.name };
-    });
-
-    this.locationManager = new LocationManager();
-    await this.locationManager.initialHomeMap(coordinates);
-
-    if (isServiceWorkerAvailable()) {
-      this.#setupPushNotification();
-    }
   }
 
   /**
@@ -338,4 +271,4 @@ class HomePage {
   }
 }
 
-export default HomePage;
+export default BookmarkPage;

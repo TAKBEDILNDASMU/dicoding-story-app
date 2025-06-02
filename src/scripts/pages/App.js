@@ -16,7 +16,7 @@ class App {
 
     // get page instance and update the dom
     const page = route();
-    this.rootElement.innerHTML = await page.present();
+    await page.present(this.rootElement);
     await page.afterPresent();
   }
 }

@@ -3,9 +3,12 @@ import mapManager from '../utils/mapManager';
 import * as StoryApi from '../data/api.js';
 import svgIcons from '../utils/svgIcons';
 import LocationService from '../services/LocationService';
+import { generateRemoveStoryButtonTemplate, generateSaveStoryButtonTemplate } from './buttonComponent.js';
+// Make sure to import deleteStory and that isReportSaved is async
+import Database, { isReportSaved } from '../data/database.js'; // Assuming deleteStory is exported
 
-export const renderModal = (storyData) => {
-  // Generate a unique ID for this modal's map container
+export const renderModal = async (storyData) => {
+  // Make renderModal async if setupBookmarkButton becomes async
   const uniqueMapId = mapManager.generateUniqueId();
   const options = {
     year: 'numeric',
@@ -16,6 +19,9 @@ export const renderModal = (storyData) => {
     hour12: false,
   };
   const date = new Date(storyData.timestamp).toLocaleString('en-US', options);
+
+  // setupBookmarkButton will now also be async
+  const bookmarkButtonHTML = await setupBookmarkButton(storyData.id);
 
   return `
     <div class="modal" id="story-modal">
@@ -28,19 +34,22 @@ export const renderModal = (storyData) => {
           <div class="modal-body__info">
             <span class="modal-body__icon-avatar">
               ${svgIcons.avatar({ username: storyData.username, className: '' })}
-            </span> 
+            </span>
             <div class="modal-body__info-user">
               <h3>${storyData.username}</h3>
-              <span>${date}</span> 
+              <span>${date}</span>
             </div>
           </div>
           <div class="modal-body__info-location">
             <span class="modal-body__icon-location">
-              ${svgIcons.location(16, 'modal-body__location-icon')} 
+              ${svgIcons.location(16, 'modal-body__location-icon')}
             </span>
             <span class="modal-body__location-text">${storyData.location}</span>
           </div>
           <div class="modal-description">
+            <div class="bookmark-button-container">
+              ${bookmarkButtonHTML}
+            </div>
             <p class="modal-description__text">${storyData.description}</p>
           </div>
           <div id="${uniqueMapId}" class="modal-map"></div>
@@ -51,72 +60,113 @@ export const renderModal = (storyData) => {
 };
 
 /**
- * Function for initialize the specific card if the user click it
+ * Function to handle bookmark button logic (save/remove) and update its display.
  */
-export const initializeModal = (presenter) => {
+const handleBookmarkAction = async (story, modalElement) => {
+  const storyId = story.id;
+  const buttonContainer = modalElement.querySelector('.bookmark-button-container');
+
+  if (!buttonContainer) {
+    console.error('Bookmark button container not found');
+    return;
+  }
+
+  // Check current saved state
+  const currentlySaved = await isReportSaved(storyId);
+
+  if (currentlySaved) {
+    await Database.removeStory(storyId);
+    console.log('Story removed from database');
+  } else {
+    await Database.putStory(story);
+    console.log('Story saved in database');
+  }
+
+  // Update the button's appearance
+  const newButtonHTML = await setupBookmarkButton(storyId); // Re-evaluate button state
+  buttonContainer.innerHTML = newButtonHTML; // Replace the button
+
+  // Re-attach the event listener to the new button
+  // (The old one is removed when innerHTML is replaced)
+  const newButton = buttonContainer.querySelector('button'); // Get the new button element
+  if (newButton) {
+    newButton.addEventListener('click', () => handleBookmarkAction(story, modalElement));
+  }
+};
+
+export const initializeModal = () => {
   const cards = document.querySelectorAll('.story-card');
 
-  // Add click event to each card
   cards.forEach((card) => {
     card.addEventListener('click', async () => {
       const presenter = new HomePresenter({
-        view: this,
+        view: this, // 'this' might be problematic depending on where initializeModal is called.
+        // Consider passing a proper view reference if needed.
         model: StoryApi,
       });
 
       const locationService = new LocationService();
       const { story } = await presenter.getStoryDetail(card.id);
 
-      // Create story data object
       const storyData = {
+        id: story.id,
         imgUrl: story.photoUrl,
         imgAlt: story.name,
         username: story.name,
         location: 'Loading Location...',
         description: story.description,
         timestamp: story.createdAt,
+        // Pass the full story object if needed by putStory
+        // Or ensure putStory can work with just storyData
       };
 
-      // Render and append modal
-      const modalHTML = renderModal(storyData);
+      const modalHTML = await renderModal(storyData); // await if renderModal is async
       document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-      // Show modal
       const modal = document.getElementById('story-modal');
       modal.classList.add('active');
-      document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+      document.body.style.overflow = 'hidden';
 
-      // Find the map container ID
       const mapContainer = modal.querySelector('.modal-map');
       const mapContainerId = mapContainer.id;
+      const locationDom = modal.querySelector('.modal-body__location-text');
 
-      const locationDom = document.querySelector('.modal-body__location-text');
-
-      // Initialize map after modal is visible
       setTimeout(async () => {
         mapManager.createMap(mapContainerId, {
           lat: story.lat,
           lng: story.lon,
           zoom: 12,
         });
-
         const locationName = await locationService.reverseGeocode(story.lat, story.lon);
         locationDom.textContent = locationName || `Location: (Lat: ${story.lat.toFixed(4)}, Long: ${story.lon.toFixed(4)})`;
       }, 300);
 
-      // Add close button event
       const closeButton = modal.querySelector('.modal-content__close-button');
       closeButton.addEventListener('click', () => {
         modal.classList.remove('active');
-
-        // Clean up map before removing the modal
         mapManager.cleanupMap(mapContainerId);
-
         setTimeout(() => {
           modal.remove();
           document.body.style.overflow = '';
         }, 300);
       });
+
+      // Initial setup for the bookmark button listener
+      const bookmarkButtonContainer = modal.querySelector('.bookmark-button-container');
+      const initialBookmarkButton = bookmarkButtonContainer.querySelector('button'); // Assumes buttonComponent renders a <button>
+      if (initialBookmarkButton) {
+        initialBookmarkButton.addEventListener('click', () => handleBookmarkAction(story, modal));
+      }
     });
   });
+};
+
+// setupBookmarkButton should now also be async if isReportSaved is async
+export const setupBookmarkButton = async (id) => {
+  console.log('Setting up bookmark button for id:', id);
+  if (await isReportSaved(id)) {
+    // Await the check
+    return generateRemoveStoryButtonTemplate();
+  }
+  return generateSaveStoryButtonTemplate();
 };
